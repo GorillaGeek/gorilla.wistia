@@ -18,13 +18,12 @@ namespace Gorilla.Wistia.Modules.Upload
 
         public async Task<Models.Media> File(Stream fileStream, string name = "", string description = "", string projectId = null)
         {
-            using (var client = new HttpClient())
             using (var formData = new MultipartFormDataContent())
             {
                 AddStringContent(formData, _client.Authentication.FieldName, _client.Authentication.Value);
-                if (!string.IsNullOrWhiteSpace(projectId)) { AddStringContent(formData, "project_id", projectId); }
-                if (!string.IsNullOrWhiteSpace(name)) { AddStringContent(formData, "name", name); }
-                if (!string.IsNullOrWhiteSpace(description)) { AddStringContent(formData, "description", description); }
+                AddStringContent(formData, "project_id", projectId);
+                AddStringContent(formData, "name", name);
+                AddStringContent(formData, "description", description);
 
                 // Add the file stream
                 var fileContent = new StreamContent(fileStream);
@@ -40,44 +39,34 @@ namespace Gorilla.Wistia.Modules.Upload
                 }
 
                 // Upload the file
-                var response = await client.PostAsync(Client.UploadUrl, formData);
+                var response = await _client.Post(Client.UploadUrl, formData);
 
-                return await FormatResponse(response);
+                return _client.Hydrate<Models.Media>(response);
             }
         }
 
-        public async Task<Models.Media> Url(string url, string name = "", string description = "", string projectId = null)
+        public async Task<Models.Media> Url(string url, string name = null, string description = null, string projectId = null)
         {
-            using (var client = new HttpClient())
+            var pars = new Dictionary<string, string>
             {
-                var pars = new Dictionary<string, string>
-                {
-                    ["url"] = url,
-                    [_client.Authentication.FieldName] = _client.Authentication.Value
-                };
+                ["url"] = url,
+                ["project_id"] = projectId,
+                ["name"] = name,
+                ["description"] = description
+            };
 
-                if (!string.IsNullOrWhiteSpace(projectId)) { pars.Add("project_id", projectId); }
-                if (!string.IsNullOrWhiteSpace(name)) { pars.Add("name", name); }
-                if (!string.IsNullOrWhiteSpace(description)) { pars.Add("description", description); }
-
-                var response = await client.PostAsync(Client.UploadUrl, new FormUrlEncodedContent(pars));
-
-                return await FormatResponse(response);
-            }
+            var response = await _client.Post(Client.UploadUrl, pars);
+            return _client.Hydrate<Models.Media>(response);
         }
-
-        private static async Task<Models.Media> FormatResponse(HttpResponseMessage response)
-        {
-            if (response.StatusCode != System.Net.HttpStatusCode.OK)
-            {
-                return null;
-            }
-
-            return Newtonsoft.Json.JsonConvert.DeserializeObject<Models.Media>(await response.Content.ReadAsStringAsync());
-        }
-
+        
         private static void AddStringContent(MultipartFormDataContent form, string name, string value)
         {
+
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return;
+            }
+
             var content = new StringContent(value);
             content.Headers.Add("Content-Disposition", "form-data; name=\"" + name + "\"");
             form.Add(content, name);

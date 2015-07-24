@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -13,15 +14,23 @@ using Project = Gorilla.Wistia.Modules.Data.Project;
 
 namespace Gorilla.Wistia
 {
-    public class Client
+    public class Client : IDisposable
     {
         public const string UploadUrl = "https://upload.wistia.com";
         public const string ApiEndpoint = "https://api.wistia.com/v1";
 
-        public Client(IAuthentication authentication)
+        private readonly HttpClient _httpClient;
+
+        public Client(IAuthentication authentication, HttpClient httpClient = null)
         {
             Authentication = authentication;
+            if (httpClient == null)
+            {
+                httpClient = new HttpClient();
+            }
+            _httpClient = httpClient;
         }
+
         public IAuthentication Authentication { get; }
 
         public Project Project => new Project(this);
@@ -33,69 +42,86 @@ namespace Gorilla.Wistia
         public Upload Upload => new Upload(this);
 
         public Stats Stats => new Stats(this);
-
+        
         public async Task<string> Get(string uri, Dictionary<string, string> parameters = null)
         {
-            using (var client = new HttpClient())
+            var pars = ParametersToQueryString(parameters);
+            var response = await _httpClient.GetAsync($"{ApiEndpoint}{uri}?{pars}");
+
+            if (!response.IsSuccessStatusCode)
             {
-                var pars = ParametersToQueryString(parameters);
-                var response = await client.GetAsync($"{ApiEndpoint}{uri}?{pars}");
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new HttpRequestException("Unable to GET the data");
-                }
-
-                return await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException("Unable to GET the data");
             }
+
+            return await response.Content.ReadAsStringAsync();
         }
 
         public async Task<string> Post(string uri, Dictionary<string, string> parameters = null)
         {
-            using (var client = new HttpClient())
+            var postData = new FormUrlEncodedContent(this.FixParameters(parameters));
+
+            var url = $"{ApiEndpoint}{uri}";
+            if (uri.StartsWith("https://"))
             {
-                var postData = new FormUrlEncodedContent(this.FixParameters(parameters));
-                var response = await client.PostAsync($"{ApiEndpoint}{uri}", postData);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new HttpRequestException("Unable to POST the data");
-                }
-
-                return await response.Content.ReadAsStringAsync();
+                url = uri;
             }
+            
+            var response = await _httpClient.PostAsync(url, postData);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException("Unable to POST the data");
+            }
+
+            return await response.Content.ReadAsStringAsync();
+        }
+
+        public async Task<string> Post(string uri, MultipartFormDataContent postData)
+        {
+            var content = new StringContent(Authentication.Value);
+            content.Headers.Add("Content-Disposition", "form-data; name=\"" + Authentication.FieldName + "\"");
+            postData.Add(content, Authentication.FieldName);
+
+            var url = $"{ApiEndpoint}{uri}";
+            if (uri.StartsWith("https://"))
+            {
+                url = uri;
+            }
+
+            var response = await _httpClient.PostAsync(url, postData);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException("Unable to POST the data");
+            }
+
+            return await response.Content.ReadAsStringAsync();
         }
 
         public async Task<string> Put(string uri, Dictionary<string, string> parameters = null)
         {
-            using (var client = new HttpClient())
+            var postData = new FormUrlEncodedContent(this.FixParameters(parameters));
+            var response = await _httpClient.PutAsync($"{ApiEndpoint}{uri}", postData);
+
+            if (!response.IsSuccessStatusCode)
             {
-                var postData = new FormUrlEncodedContent(this.FixParameters(parameters));
-                var response = await client.PutAsync($"{ApiEndpoint}{uri}", postData);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new HttpRequestException("Unable to PUT the data");
-                }
-
-                return await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException("Unable to PUT the data");
             }
+
+            return await response.Content.ReadAsStringAsync();
         }
 
         public async Task<string> Delete(string uri, Dictionary<string, string> parameters = null)
         {
-            using (var client = new HttpClient())
-            {
-                var pars = ParametersToQueryString(parameters);
-                var response = await client.DeleteAsync($"{ApiEndpoint}{uri}?{pars}");
+            var pars = ParametersToQueryString(parameters);
+            var response = await _httpClient.DeleteAsync($"{ApiEndpoint}{uri}?{pars}");
                 
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new HttpRequestException("Unable to DELETE the data");
-                }
-
-                return await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException("Unable to DELETE the data");
             }
+
+            return await response.Content.ReadAsStringAsync();
         }
 
         private Dictionary<string, string> FixParameters(Dictionary<string, string> parameters = null)
@@ -114,9 +140,14 @@ namespace Gorilla.Wistia
                          .Select(p => $"{p.Key}=" + HttpUtility.UrlEncode(p.Value)));
         }
 
-        public T Hydrate<T>(string data)
+        public T Hydrate<T>(string jsonDate)
         {
-            return JsonConvert.DeserializeObject<T>(data);
+            return JsonConvert.DeserializeObject<T>(jsonDate);
+        }
+
+        public void Dispose()
+        {
+            _httpClient.Dispose();
         }
     }
 }
