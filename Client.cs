@@ -42,8 +42,8 @@ namespace Gorilla.Wistia
         public Upload Upload => new Upload(this);
 
         public Stats Stats => new Stats(this);
-        
-        public async Task<string> Get(string uri, Dictionary<string, string> parameters = null)
+
+        internal async Task<string> Get(string uri, Dictionary<string, string> parameters = null)
         {
             var pars = ParametersToQueryString(parameters);
             var response = await _httpClient.GetAsync($"{ApiEndpoint}{uri}?{pars}");
@@ -56,7 +56,7 @@ namespace Gorilla.Wistia
             return await response.Content.ReadAsStringAsync();
         }
 
-        public async Task<string> Post(string uri, Dictionary<string, string> parameters = null)
+        internal async Task<string> Post(string uri, Dictionary<string, string> parameters = null)
         {
             var postData = new FormUrlEncodedContent(this.FixParameters(parameters));
 
@@ -76,7 +76,7 @@ namespace Gorilla.Wistia
             return await response.Content.ReadAsStringAsync();
         }
 
-        public async Task<string> Post(string uri, MultipartFormDataContent postData)
+        internal async Task<string> Post(string uri, MultipartFormDataContent postData)
         {
             var content = new StringContent(Authentication.Value);
             content.Headers.Add("Content-Disposition", "form-data; name=\"" + Authentication.FieldName + "\"");
@@ -98,7 +98,7 @@ namespace Gorilla.Wistia
             return await response.Content.ReadAsStringAsync();
         }
 
-        public async Task<string> Put(string uri, Dictionary<string, string> parameters = null)
+        internal async Task<string> Put(string uri, Dictionary<string, string> parameters = null)
         {
             var postData = new FormUrlEncodedContent(this.FixParameters(parameters));
             var response = await _httpClient.PutAsync($"{ApiEndpoint}{uri}", postData);
@@ -111,7 +111,7 @@ namespace Gorilla.Wistia
             return await response.Content.ReadAsStringAsync();
         }
 
-        public async Task<string> Delete(string uri, Dictionary<string, string> parameters = null)
+        internal async Task<string> Delete(string uri, Dictionary<string, string> parameters = null)
         {
             var pars = ParametersToQueryString(parameters);
             var response = await _httpClient.DeleteAsync($"{ApiEndpoint}{uri}?{pars}");
@@ -140,7 +140,7 @@ namespace Gorilla.Wistia
                          .Select(p => $"{p.Key}=" + HttpUtility.UrlEncode(p.Value)));
         }
 
-        public T Hydrate<T>(string jsonDate)
+        internal T Hydrate<T>(string jsonDate)
         {
             return JsonConvert.DeserializeObject<T>(jsonDate);
         }

@@ -10,6 +10,7 @@ namespace Gorilla.Wistia.Models
         public string hashed_id { get; set; }
         public string name { get; set; }
         public string description { get; set; }
+        public int duration { get; set; }
         public string type { get; set; }
         public string status { get; set; }
         public float progress { get; set; }

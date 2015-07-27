@@ -16,6 +16,5 @@ namespace Gorilla.Wistia.Modules.Data
             var data = await _client.Get("/account.json");
             return _client.Hydrate<Models.Account>(data);
         }
-
     }
 }
