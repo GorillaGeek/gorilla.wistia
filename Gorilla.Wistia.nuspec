@@ -2,9 +2,9 @@
 <package >
   <metadata>
     <id>$id$</id>
-    <version>0.0.1</version>
+    <version>$version$</version>
     <title>$title$</title>
-    <authors>caferrari</authors>
+    <authors>Carlos André Ferrari</authors>
     <owners>caferrari</owners>
     <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
     <projectUrl>https://github.com/GorillaGeek/gorilla.wistia</projectUrl>

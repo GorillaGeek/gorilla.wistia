@@ -9,16 +9,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleApp", "SampleApp\Samp
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C48741FC-5359-4B5E-B70B-548AEC869BED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C48741FC-5359-4B5E-B70B-548AEC869BED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C48741FC-5359-4B5E-B70B-548AEC869BED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C48741FC-5359-4B5E-B70B-548AEC869BED}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0D6C94A9-5345-4C8C-A970-2E4867187EFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0D6C94A9-5345-4C8C-A970-2E4867187EFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0D6C94A9-5345-4C8C-A970-2E4867187EFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0D6C94A9-5345-4C8C-A970-2E4867187EFD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
